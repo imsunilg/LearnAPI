@@ -3,6 +3,7 @@ using System.Text;
 using LearnAPI.Application.Services;
 using LearnAPI.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using LearnAPI.Infrastructure.PostgreSQL;
 using LearnAPI.Infrastructure.Repositories;
@@ -46,7 +47,8 @@ public static class ServiceCollectionExtensions
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromSeconds(30),
             });
-        services.AddAuthorization();
+        // Secure by default: every endpoint requires a signed-in user unless it opts out with [AllowAnonymous].
+        services.AddAuthorization(o => o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
         return services;
     }
 
