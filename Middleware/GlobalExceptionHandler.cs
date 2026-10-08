@@ -32,6 +32,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             Instance = context.Request.Path,
         };
         problem.Extensions["traceId"] = context.TraceIdentifier;
+        problem.Extensions["correlationId"] = context.TraceIdentifier; // same value: CorrelationIdMiddleware sets TraceIdentifier
         if (errors is not null) problem.Extensions["errors"] = errors;
 
         context.Response.StatusCode = status;

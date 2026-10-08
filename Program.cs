@@ -34,7 +34,9 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>(); // first: every log line and error body carries the id
 app.UseCors("web"); // before the exception handler so error responses still carry CORS headers
+app.UseMiddleware<AuditMiddleware>(); // outside the exception handler, so it sees the final status code
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
