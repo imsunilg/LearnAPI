@@ -1,5 +1,9 @@
 using LearnAPI.Application.Interfaces;
+using System.Text;
 using LearnAPI.Application.Services;
+using LearnAPI.Infrastructure.Security;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using LearnAPI.Infrastructure.PostgreSQL;
 using LearnAPI.Infrastructure.Repositories;
 using Npgsql;
@@ -21,6 +25,31 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
+    {
+        services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
+        var jwt = config.GetSection(JwtOptions.Section).Get<JwtOptions>() ?? new JwtOptions();
+        if (jwt.Key.Length < 32)
+            throw new InvalidOperationException("Jwt:Key must be at least 32 characters (set it with user-secrets or environment variables).");
+
+        services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwt.Issuer,
+                ValidateAudience = true,
+                ValidAudience = jwt.Audience,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromSeconds(30),
+            });
+        services.AddAuthorization();
+        return services;
+    }
+
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration config)
     {
         var origins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -28,6 +57,7 @@ public static class ServiceCollectionExtensions
             .WithOrigins(origins)
             .AllowAnyHeader()
             .AllowAnyMethod()
+            .AllowCredentials() // needed for the httpOnly refresh-token cookie
             .WithExposedHeaders("X-Correlation-Id", "Content-Disposition")));
         return services;
     }

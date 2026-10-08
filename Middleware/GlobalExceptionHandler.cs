@@ -1,4 +1,5 @@
 using FluentValidation;
+using LearnAPI.Common;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
@@ -50,6 +51,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         PostgresException { SqlState: "23502" } p => (400, "Missing required value", $"Required field '{p.ColumnName}' is missing.", null),
         PostgresException { SqlState: "23514" } p => (400, "Invalid value", FriendlyConstraint(p, "failed a validation rule"), null),
         PostgresException { SqlState: "22P02" or "22007" or "22008" } => (400, "Invalid value", "A value had an invalid format.", null),
+        UnauthorizedException u => (401, "Unauthorized", u.Message, null),
+        ForbiddenException f => (403, "Forbidden", f.Message, null),
+        NotFoundException n => (404, "Not found", n.Message, null),
+        ConflictException c => (409, "Conflict", c.Message, null),
+        BusinessRuleException b => (400, "Business rule violated", b.Message, null),
         BadHttpRequestException b => (400, "Bad request", b.Message, null),
         UnauthorizedAccessException u => (403, "Forbidden", u.Message, null),
         KeyNotFoundException k => (404, "Not found", k.Message, null),
