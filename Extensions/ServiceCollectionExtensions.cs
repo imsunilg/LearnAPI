@@ -1,5 +1,7 @@
 using LearnAPI.Application.Interfaces;
+using LearnAPI.Application.Services;
 using LearnAPI.Infrastructure.PostgreSQL;
+using LearnAPI.Infrastructure.Repositories;
 using Npgsql;
 
 namespace LearnAPI.Extensions;
@@ -14,6 +16,8 @@ public static class ServiceCollectionExtensions
         // One NpgsqlDataSource = one connection pool for the whole app.
         services.AddSingleton(NpgsqlDataSource.Create(connectionString));
         services.AddScoped<IJsonDb, PostgresJsonDb>();
+        services.AddScoped<IEntityRepository, EntityRepository>();
+        services.AddScoped<ICrudService, CrudService>();
         return services;
     }
 
