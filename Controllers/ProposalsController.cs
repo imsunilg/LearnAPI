@@ -28,6 +28,17 @@ public class ProposalsController(ICrudService service, IJsonDb db) : CrudControl
     public override async Task<IActionResult> Update(long id, ProposalRequest request, CancellationToken ct) =>
         JsonResult(await db.CallAsync("fn_proposal_save", ct, id, new Json(JsonSerializer.Serialize(request, JsonDefaults.Web)), CurrentUser));
 
+    /// <summary>
+    /// Unified submission for the wizard: create or update the draft AND submit it in one transaction.
+    /// </summary>
+    [HttpPost("submit")]
+    public async Task<IActionResult> SaveAndSubmit(SubmitProposalRequest request, CancellationToken ct)
+    {
+        var json = await db.CallAsync("fn_proposal_save_and_submit", ct, request.ProposalId,
+            new Json(JsonSerializer.Serialize(request.Proposal, JsonDefaults.Web)), CurrentUser);
+        return JsonResult(json, request.ProposalId is null ? StatusCodes.Status201Created : StatusCodes.Status200OK);
+    }
+
     /// <summary>Draft → Submitted (needs proposals.create like the rest of the write endpoints).</summary>
     [HttpPost("{id:long}/submit")]
     public async Task<IActionResult> Submit(long id, CancellationToken ct) =>

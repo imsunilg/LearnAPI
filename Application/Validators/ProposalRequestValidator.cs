@@ -30,3 +30,12 @@ public sealed class DecisionRequestValidator : AbstractValidator<DecisionRequest
         RuleFor(x => x.Remarks!).MaximumLength(500).When(x => x.Remarks is not null);
     }
 }
+
+public sealed class SubmitProposalRequestValidator : AbstractValidator<SubmitProposalRequest>
+{
+    public SubmitProposalRequestValidator()
+    {
+        RuleFor(x => x.Proposal).NotNull().SetValidator(new ProposalRequestValidator());
+        RuleFor(x => x.Proposal.Partial).Equal(false).WithMessage("An incomplete proposal cannot be submitted.");
+    }
+}

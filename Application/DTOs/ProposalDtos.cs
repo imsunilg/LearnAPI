@@ -11,8 +11,13 @@ public sealed record ProposalRequest(
     long? AgentId,
     long? BrokerId,
     string? Remarks,
-    JsonElement Details);
+    JsonElement Details,
+    /// <summary>Wizard "save & exit" before the form is complete: stored without a price, cannot be submitted.</summary>
+    bool Partial = false);
 
 public sealed record DecisionRequest(string Decision, string? Remarks);
 
 public sealed record CancelRequest(string? Remarks);
+
+/// <summary>Unified submission: ProposalId is set when a saved draft is being completed.</summary>
+public sealed record SubmitProposalRequest(long? ProposalId, ProposalRequest Proposal);
