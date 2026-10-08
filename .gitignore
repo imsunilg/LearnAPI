@@ -1,2 +1,6 @@
 
 storage/
+bin/
+obj/
+*.log
+.vs/
