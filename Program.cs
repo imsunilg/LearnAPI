@@ -8,7 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers(o =>
 {
-    o.Filters.Add<PermissionFilter>(); // authorization first...
+    // Filters.Add<T>() wraps the type in a factory whose Order is 0, so the order must be given here, BEFORE [ApiController]'s model-state filter (-2000).
+    o.Filters.Add(typeof(PermissionFilter), -3000); // authorization first...
     o.Filters.Add<ValidationFilter>(); // ...then validation
 });
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

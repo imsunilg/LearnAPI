@@ -58,8 +58,11 @@ public interface IPermissionScoped
 /// Global filter: for controllers that implement <see cref="IPermissionScoped"/> the HTTP verb decides the permission
 /// (GET → view, POST → create, PUT/PATCH → edit, DELETE → delete). A missing permission becomes a 403 ProblemDetails.
 /// </summary>
-public sealed class PermissionFilter : IAsyncActionFilter
+public sealed class PermissionFilter : IAsyncActionFilter, Microsoft.AspNetCore.Mvc.Filters.IOrderedFilter
 {
+    /// <summary>Runs BEFORE [ApiController]'s automatic model-state 400 (order -2000): a caller without permission must get 403, never validation hints.</summary>
+    public int Order => -3000;
+
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         // An explicit [HasPermission(...)] on the action replaces the verb-based rule (e.g. policies.issue on POST /issue).
