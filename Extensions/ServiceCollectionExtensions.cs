@@ -29,6 +29,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<MasterDataCache>();
         services.AddSingleton<LearnAPI.Infrastructure.Payments.IPaymentGateway, LearnAPI.Infrastructure.Payments.MockPaymentGateway>();
         services.AddScoped<PaymentService>();
+        services.Configure<LearnAPI.Infrastructure.Storage.StorageOptions>(config.GetSection(LearnAPI.Infrastructure.Storage.StorageOptions.Section));
+        services.AddSingleton<LearnAPI.Infrastructure.Storage.IFileStorage, LearnAPI.Infrastructure.Storage.LocalFileStorage>();
+        services.AddScoped<DocumentService>();
         return services;
     }
 
