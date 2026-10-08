@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using LearnAPI.Application.DTOs;
 using LearnAPI.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -6,13 +8,15 @@ namespace LearnAPI.Controllers;
 
 /// <summary>
 /// Thin base controller for entities backed by generated fn_&lt;entity&gt;_* functions.
-/// Derived controllers only declare the route and the entity key.
+/// Derived controllers only declare the route and the entity key; there is no business logic here.
 /// </summary>
 [ApiController]
 public abstract class CrudControllerBase(ICrudService service) : ControllerBase
 {
     private static readonly HashSet<string> ReservedQueryKeys =
         new(StringComparer.OrdinalIgnoreCase) { "search", "page", "pageSize", "sortBy", "sortDir" };
+
+    protected ICrudService Service => service;
 
     /// <summary>Entity key = function prefix, e.g. "customer" → fn_customer_get_all.</summary>
     protected abstract string Entity { get; }
@@ -42,4 +46,30 @@ public abstract class CrudControllerBase(ICrudService service) : ControllerBase
         var json = await service.GetByIdAsync(Entity, id, ct);
         return json is null ? NotFoundProblem(id) : JsonResult(json);
     }
+}
+
+/// <summary>CRUD controller with typed, validated request bodies.</summary>
+public abstract class CrudControllerBase<TRequest>(ICrudService service) : CrudControllerBase(service)
+    where TRequest : class
+{
+    [HttpPost]
+    public virtual async Task<IActionResult> Create([FromBody] TRequest request, CancellationToken ct)
+    {
+        var json = await Service.CreateAsync(Entity, JsonSerializer.Serialize(request, JsonDefaults.Web), CurrentUser, ct);
+        var id = JsonNode.Parse(json!)?["id"]?.GetValue<long>();
+        Response.Headers.Location = $"{Request.Path}/{id}";
+        return JsonResult(json, StatusCodes.Status201Created);
+    }
+
+    [HttpPut("{id:long}")]
+    public virtual async Task<IActionResult> Update(long id, [FromBody] TRequest request, CancellationToken ct) =>
+        JsonResult(await Service.UpdateAsync(Entity, id, JsonSerializer.Serialize(request, JsonDefaults.Web), CurrentUser, ct));
+
+    [HttpPatch("{id:long}/status")]
+    public virtual async Task<IActionResult> SetStatus(long id, [FromBody] StatusRequest request, CancellationToken ct) =>
+        JsonResult(await Service.SetActiveAsync(Entity, id, request.IsActive, CurrentUser, ct));
+
+    [HttpDelete("{id:long}")]
+    public virtual async Task<IActionResult> Delete(long id, CancellationToken ct) =>
+        JsonResult(await Service.DeleteAsync(Entity, id, CurrentUser, ct));
 }
