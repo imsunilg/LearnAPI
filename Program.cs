@@ -29,12 +29,16 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddCorsPolicy(builder.Configuration);
+builder.Services.AddApiRateLimiting(builder.Configuration);
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>(); // first: every log line and error body carries the id
+app.UseMiddleware<SecurityHeadersMiddleware>();
+if (!app.Environment.IsDevelopment()) app.UseHsts(); // HTTPS-only in production (Strict-Transport-Security)
+app.UseRateLimiter();
 app.UseCors("web"); // before the exception handler so error responses still carry CORS headers
 app.UseMiddleware<AuditMiddleware>(); // outside the exception handler, so it sees the final status code
 app.UseExceptionHandler();

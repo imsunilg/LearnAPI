@@ -14,6 +14,7 @@ public class AuthController(IAuthService auth) : ControllerBase
     private const string RefreshCookie = "li_rt";
 
     [AllowAnonymous]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(LearnAPI.Middleware.RateLimitingExtensions.AuthPolicy)]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
     {
