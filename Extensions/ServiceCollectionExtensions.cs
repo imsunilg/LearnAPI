@@ -6,6 +6,7 @@ using LearnAPI.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using LearnAPI.Infrastructure.Data;
 using LearnAPI.Infrastructure.PostgreSQL;
 using LearnAPI.Infrastructure.Repositories;
 using Npgsql;
@@ -24,6 +25,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJsonDb, PostgresJsonDb>();
         services.AddScoped<IEntityRepository, EntityRepository>();
         services.AddScoped<ICrudService, CrudService>();
+        services.AddMemoryCache();
+        services.AddScoped<MasterDataCache>();
         return services;
     }
 
