@@ -27,6 +27,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICrudService, CrudService>();
         services.AddMemoryCache();
         services.AddScoped<MasterDataCache>();
+        services.AddSingleton<LearnAPI.Infrastructure.Payments.IPaymentGateway, LearnAPI.Infrastructure.Payments.MockPaymentGateway>();
+        services.AddScoped<PaymentService>();
         return services;
     }
 
