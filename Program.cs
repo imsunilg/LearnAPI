@@ -6,7 +6,11 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers(o => o.Filters.Add<ValidationFilter>());
+builder.Services.AddControllers(o =>
+{
+    o.Filters.Add<PermissionFilter>(); // authorization first...
+    o.Filters.Add<ValidationFilter>(); // ...then validation
+});
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

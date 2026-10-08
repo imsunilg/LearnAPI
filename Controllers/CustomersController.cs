@@ -8,4 +8,5 @@ namespace LearnAPI.Controllers;
 public class CustomersController(ICrudService service) : CrudControllerBase<CustomerRequest>(service)
 {
     protected override string Entity => "customer";
+    public override string PermissionModule => "customers";
 }

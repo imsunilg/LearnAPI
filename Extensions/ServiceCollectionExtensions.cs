@@ -1,6 +1,7 @@
 using LearnAPI.Application.Interfaces;
 using System.Text;
 using LearnAPI.Application.Services;
+using LearnAPI.Common;
 using LearnAPI.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -47,6 +48,8 @@ public static class ServiceCollectionExtensions
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromSeconds(30),
             });
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+        services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
         // Secure by default: every endpoint requires a signed-in user unless it opts out with [AllowAnonymous].
         services.AddAuthorization(o => o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
         return services;

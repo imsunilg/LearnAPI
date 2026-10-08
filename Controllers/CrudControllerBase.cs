@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using LearnAPI.Application.DTOs;
 using LearnAPI.Application.Interfaces;
+using LearnAPI.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LearnAPI.Controllers;
@@ -11,8 +12,11 @@ namespace LearnAPI.Controllers;
 /// Derived controllers only declare the route and the entity key; there is no business logic here.
 /// </summary>
 [ApiController]
-public abstract class CrudControllerBase(ICrudService service) : ControllerBase
+public abstract class CrudControllerBase(ICrudService service) : ControllerBase, IPermissionScoped
 {
+    /// <summary>Permission module, e.g. "customers" → customers.view / .create / .edit / .delete.</summary>
+    public abstract string PermissionModule { get; }
+
     private static readonly HashSet<string> ReservedQueryKeys =
         new(StringComparer.OrdinalIgnoreCase) { "search", "page", "pageSize", "sortBy", "sortDir" };
 
