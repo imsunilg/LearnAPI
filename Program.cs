@@ -5,6 +5,18 @@ using LearnAPI.Middleware;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+StartupChecks.Validate(builder.Configuration, builder.Environment);
+
+// Behind a reverse proxy (nginx, a cloud load balancer) the TCP peer is the proxy. Opt in with Proxy__Enabled=true so that
+// rate limiting, audit logs and the Secure cookie flag see the real client IP and the original https scheme.
+var behindProxy = builder.Configuration.GetValue<bool>("Proxy:Enabled");
+if (behindProxy)
+    builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(o =>
+    {
+        o.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        o.KnownNetworks.Clear(); // the proxy runs in a private network we control; do not enable this when the API is directly on the internet
+        o.KnownProxies.Clear();
+    });
 
 builder.Services.AddControllers(o =>
 {
@@ -36,6 +48,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
+if (behindProxy) app.UseForwardedHeaders();
 app.UseMiddleware<CorrelationIdMiddleware>(); // first: every log line and error body carries the id
 app.UseMiddleware<SecurityHeadersMiddleware>();
 if (!app.Environment.IsDevelopment()) app.UseHsts(); // HTTPS-only in production (Strict-Transport-Security)
