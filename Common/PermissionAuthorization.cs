@@ -62,7 +62,11 @@ public sealed class PermissionFilter : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        if (context.Controller is IPermissionScoped scoped)
+        // An explicit [HasPermission(...)] on the action replaces the verb-based rule (e.g. policies.issue on POST /issue).
+        var explicitPolicy = context.ActionDescriptor.EndpointMetadata.OfType<AuthorizeAttribute>()
+            .Any(a => a.Policy?.StartsWith(PermissionPolicy.Prefix, StringComparison.Ordinal) == true);
+
+        if (!explicitPolicy && context.Controller is IPermissionScoped scoped)
         {
             var verb = context.HttpContext.Request.Method switch
             {
