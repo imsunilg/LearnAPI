@@ -31,6 +31,14 @@ public class PoliciesController(ICrudService service, IJsonDb db) : CrudControll
         return JsonResult(json);
     }
 
+    /// <summary>The whole policy file in one response: policy, customer, insured sections, history (and more on later days).</summary>
+    [HttpGet("{id:long}/details")]
+    public async Task<IActionResult> Details(long id, CancellationToken ct)
+    {
+        var json = await db.CallAsync("fn_policy_get_details", ct, id);
+        return json is null ? NotFoundProblem(id) : JsonResult(json);
+    }
+
     public sealed record IssueRequest(long ProposalId);
 
     [HttpPost("issue")]
